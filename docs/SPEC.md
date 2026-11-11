@@ -98,7 +98,7 @@ name:        string
 description: string
 remarks:     string
 time:        BusinessTime
-entries:     EntryLeg[]
+legs:        EntryLeg[]
 type:        EntryType
 state:       EntryState
 revisions:   EntryRevision[]  // oldest first
@@ -127,8 +127,8 @@ cashAmount:       BigDec       // how much of bookAmount is cash, [0, bookAmount
                                // on an isCashOrCashEquivalent account this is the full bookAmount
 originalAmount:   BigDec       // zero or positive
 originalCurrency: string       // must equal the account's baseCurrency
-isTaxRelevant:    boolean      // whether this leg is included in the taxable section of EBIT;
-                               // moot for asset transfers or equity in/out
+isTaxRelevant:    boolean      // income and expense legs: counts toward taxable instead of nonTaxable
+                               // in the income statement's tax split; moot on asset, liability and equity legs
 metadata:         LegMetadata
 ```
 
