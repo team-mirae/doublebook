@@ -10,7 +10,6 @@ use serde_json::{Value, json};
 use uuid::Uuid;
 
 use crate::book::{Change, Error, Index, validate_book, validate_entry};
-use crate::migrate::terraform;
 use crate::model::*;
 use crate::reports;
 use crate::time::{BusinessTime, BusinessTimeRange};
@@ -160,10 +159,6 @@ pub enum Request {
         book: Book,
         year: i32,
     },
-    /// Converts a Terraform accountant export (one array per table) into books.
-    MigrateTerraform {
-        export: terraform::Export,
-    },
 }
 
 fn ok<T: serde::Serialize>(v: T) -> Result<Value, Error> {
@@ -277,7 +272,6 @@ pub fn handle(req: Request) -> Result<Value, Error> {
             require_final,
         } => ok(reports::leg_tag_summary(&book, range, require_final)?),
         FiscalYear { book, year } => ok(reports::fiscal_year(&book, year)?),
-        MigrateTerraform { export } => ok(terraform::migrate(&export)),
     }
 }
 
