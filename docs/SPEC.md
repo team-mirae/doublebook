@@ -2,13 +2,19 @@
 
 Notation: `field: Type` per line, `// comment` for constraints. `T?` is optional, `T[]` a list.
 
+Every record that came from another system can carry its old id in `legacyId: string?`, and `extra: map<string, string>` holds
+free strings the engine never reads (Book, Currency, Account, Client, Entry, EntryLeg). Both are carried verbatim and change no rule.
+
 ## Time
 
 ### BusinessTime
 
 `yyyymmdd hhmm`, where `hh` is a signed 32-bit integer (`i32`) and `mm` is `[0, 59]`.
 
-- The date always wins a comparison: 1/15 99:00 is before 1/16 -99:00.
+- Text form: `YYYY-MM-DDTHH:MM`, the hour signed and at least two digits: `2026-08-30T26:01`, `2026-08-31T-04:38`.
+- The minute is always added to the hour: `-04:38` is -4 hours plus 38 minutes, 3h22m before midnight.
+- Range: `0000-01-01T-2147483648:00` to `9999-12-31T2147483647:59`.
+- The date always wins a comparison: 1/15 99:00 is before 1/16 -99:00. Then hour, then minute.
 - Entries at the same BusinessTime are ordered by their uuidv7 `uniqueId` (this is why entries use v7).
 
 ### BusinessTimeRange
@@ -24,7 +30,7 @@ until: BusinessTime  // exclusive
 uniqueId:     uuidv4
 nameEnglish:  string
 nameKorean:   string
-baseCurrency: string      // code of one of this book's currencies
+baseCurrency: string      // code of one of this book's currencies; immutable once the book has entries
 closingMonth: u8 [1, 12]  // last month of the fiscal year
 currencies:   Currency[]
 accounts:     Account[]
@@ -68,7 +74,8 @@ isCashOrCashEquivalent: boolean              // asset accounts only, immutable o
 tags:                   AccountTag[]
 ```
 
-- Accounts form a tree per type. Only leaves take legs: an account that has legs cannot be given a child.
+- Accounts form a tree per type. Only leaves take legs: an account that has legs (voided entries included) cannot be given a child.
+- Tree order: Asset, Liability, Equity, Income, Expense; siblings by `sortOrder`, then `uniqueId`.
 - The tree must not contain cycles.
 - Retiring: an account is retired by setting `validUntil` to the border of when it was valid.
 - An account is only valid where its parent is valid as well.
@@ -163,7 +170,7 @@ A string wrapper object. Example: `R&D` / `연구개발비` / `research-and-deve
 
 ```text
 revision:   u32        // 1, 2, 3, ... per entry
-recordedAt: timestamp  // wall-clock time the change was made, not BusinessTime
+recordedAt: string     // RFC 3339 UTC wall-clock time of the change, not BusinessTime
 author:     string
 reason:     string     // required: why the change was made
 before:     Entry      // snapshot of the entry as it was before this change, without its revisions
@@ -186,6 +193,8 @@ invalidRanges: BusinessTimeRange[]
 ## Validation
 
 An entry is checked as a whole and every problem is reported at once, not just the first.
+A voided entry is not checked, so voiding always succeeds; making it draft or final again checks it in full.
+An entry's `uniqueId` is a uuidv7.
 
 1. An entry has at least two legs.
 2. Sum of debit `bookAmount` equals sum of credit `bookAmount`.
@@ -424,3 +433,9 @@ until: first day of the month after closingMonth in year,     hh i32::MIN, mm 0
 ```
 
 Every entry dated inside the year is in it, whatever its hour. `closingMonth` 12, year 2026: 2026-01-01 to 2027-01-01.
+
+## JSON
+
+Field names as written in this spec. Amounts (`BigDec`) are plain decimal strings (`"1500"`, `"-12.50"`), never JSON numbers.
+Enum values: AccountType `Asset` `Liability` `Income` `Expense` `Equity`; EntryType `normal` `closing`;
+EntryState `draft` `final` `voided`; LegSide `debit` `credit`; LegType `operating` `financing` `investing` `fx_effects` `other`.
