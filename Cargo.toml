@@ -2,7 +2,7 @@
 name = "doublebook"
 version = "0.1.0"
 edition = "2024"
-description = "Headless double-entry accounting library for teammirae-app's accountant module, with a CLI."
+description = "Headless double-entry accounting library with a JSON API, a C ABI and a CLI."
 license = "CC0-1.0"
 repository = "https://github.com/team-mirae/doublebook"
 publish = false
@@ -19,7 +19,7 @@ path = "src/main.rs"
 bigdecimal = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-uuid = { version = "1", features = ["v4", "v5", "v7", "serde"] }
+uuid = { version = "1", features = ["v4", "v7", "serde"] }
 
 [profile.release]
 lto = true
