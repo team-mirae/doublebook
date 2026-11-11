@@ -1,0 +1,17 @@
+[package]
+name = "doublebook"
+version = "0.1.0"
+edition = "2024"
+description = "Headless double-entry accounting library for teammirae-app's accountant module, with a CLI."
+license = "CC0-1.0"
+repository = "https://github.com/team-mirae/doublebook"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "doublebook"
+path = "src/main.rs"
+
+[dependencies]
